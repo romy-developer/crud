@@ -20,7 +20,7 @@ app.use(cors({
     return callback(new Error('Origin is not allowed by CORS.'));
   },
 }));
-app.use(express.json({ limit: '10kb' }));
+app.use(express.json({ limit: '2mb' }));
 
 app.get('/api/health', async (req, res) => {
   try {

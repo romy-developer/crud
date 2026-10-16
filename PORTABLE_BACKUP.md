@@ -1,34 +1,38 @@
-# Move this app to another computer
+# Move the app and its employee data
 
-The GitHub repository stores the application source and `database/schema.sql` (the database structure). A timestamped PostgreSQL SQL dump in the local `backups` folder stores the database structure and employee records. That dump is intentionally ignored by Git; keep it private because it may contain personal information.
+Git stores the app source and `database/schema.sql`, but not live employee records. A timestamped PostgreSQL SQL dump in `backups/` stores both the schema and employee data. The `backups/` directory is ignored by Git. Keep dump files private because they contain personal information and employee photos.
 
-## On the new computer
+The latest local dump is `employee-crud-database-20261016-123236.sql`. Copy the dump securely when moving the database to another computer.
 
-Install Node.js/npm and PostgreSQL. Use PostgreSQL 18 or newer when possible because this backup was made from PostgreSQL 18.6.
+## Restore on another computer
 
-1. Clone the GitHub repository and open the project folder.
-2. Create an empty database named `employee_crud` using the PostgreSQL account you will use for the app.
-3. Restore the timestamped `.sql` file from the backup folder into that database.
-4. Copy `backend/.env.example` to `backend/.env` and enter the new computer's local database settings and password. Never copy a real `.env` file between computers or commit it to Git.
-5. Open two terminals. In the first, run `cd backend`, `npm ci`, then `npm run dev`. In the second, run `cd frontend`, `npm ci`, then `npm run dev`.
-6. Open the local address printed by Vite, usually `http://localhost:5173`.
+Install Node.js/npm and PostgreSQL. Use PostgreSQL 18, the version used to create the current dump. Then:
 
-For Windows PowerShell, use `npm.cmd` if `npm` is blocked by the PowerShell script policy. The SQL file is a plain-text PostgreSQL dump; it can be restored on Windows, macOS, or Linux using PostgreSQL's `psql` command-line tool.
+1. Clone the repository and open its folder.
+2. Create an empty database named `employee_crud` using the PostgreSQL account that the app will use.
+3. Copy the SQL dump into the `backups/` folder (or note its actual path).
+4. Restore the dump into the empty database.
+5. Copy `backend/.env.example` to `backend/.env` and enter the destination computer's database settings. Do not copy the old `.env` or commit a real password.
+6. Install packages with `npm.cmd ci` in both `backend/` and `frontend/`.
+7. Start the backend with `npm.cmd run dev` in `backend/`, then the frontend with `npm.cmd run dev` in `frontend/`.
+8. Open the local URL printed by Vite, usually `http://localhost:5173`.
 
-## Example restore commands
-
-These commands assume the database does not already exist. Choose the matching commands for the new computer and replace the dump filename with the timestamped SQL file from your backup copy.
-
-Windows PowerShell:
+Windows PowerShell restore command (replace the filename if using another dump):
 
 ```powershell
 createdb -U postgres employee_crud
-psql -U postgres -d employee_crud -f .\backups\employee-crud-database-<timestamp>.sql
+psql -U postgres -d employee_crud -f .\backups\employee-crud-database-20261016-123236.sql
 ```
 
 macOS or Linux:
 
 ```sh
 createdb -U postgres employee_crud
-psql -U postgres -d employee_crud < ./backups/employee-crud-database-<timestamp>.sql
+psql -U postgres -d employee_crud < ./backups/employee-crud-database-20261016-123236.sql
 ```
+
+If you are setting up an empty database without importing records, apply `database/schema.sql` instead. It creates the current table and adds missing columns to an existing table. Do not restore a full dump over a database with records you want to keep; take a separate backup first.
+
+## Current employee data
+
+The `employees` table stores name, email, mobile, designation, department, employment status, optional gender, optional photo, and creation time. Photos are stored as data URLs. SQL dumps include these images as well as employee details, so handle them like confidential personnel records.

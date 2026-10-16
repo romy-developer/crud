@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar.jsx'
 import EmployeeForm from '../components/EmployeeForm.jsx'
 import EmployeeTable from '../components/EmployeeTable.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
+import EmployeeDetails from '../components/EmployeeDetails.jsx'
 import { createEmployee, deleteEmployee, getApiError, getEmployees, updateEmployee } from '../services/employeeService.js'
 
 export default function EmployeeDashboard() {
@@ -19,6 +20,7 @@ export default function EmployeeDashboard() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [pendingDelete, setPendingDelete] = useState(null)
+  const [viewing, setViewing] = useState(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -49,6 +51,7 @@ export default function EmployeeDashboard() {
   }
 
   function openEditForm(employee) {
+    setViewing(null)
     setEditing(employee)
     setFormError('')
     setShowForm(true)
@@ -113,12 +116,13 @@ export default function EmployeeDashboard() {
           </div>
           {pageError && <div className="alert alert-error" role="alert"><span>{pageError}</span><button type="button" onClick={() => { setPageError(''); setLoading(true); setRefreshKey((key) => key + 1) }}>Try again</button></div>}
           {notice && <div className="alert alert-success" role="status">{notice}<button type="button" aria-label="Dismiss notification" onClick={() => setNotice('')}>×</button></div>}
-          {loading ? <div className="loading-state" role="status"><span className="spinner" /> Loading employees…</div> : <EmployeeTable employees={employees} onEdit={openEditForm} onDelete={setPendingDelete} />}
+          {loading ? <div className="loading-state" role="status"><span className="spinner" /> Loading employees…</div> : <EmployeeTable employees={employees} onView={setViewing} onEdit={openEditForm} onDelete={setPendingDelete} />}
           {!loading && !pageError && <div className="table-footer">Showing <strong>{employees.length}</strong> of <strong>{totalEmployees}</strong> employees</div>}
         </section>
         <footer className="page-footer">PeopleDesk <span>·</span> Employee directory</footer>
       </main>
       {showForm && <EmployeeForm employee={editing} saving={saving} error={formError} onCancel={() => setShowForm(false)} onSave={saveEmployee} />}
+      <EmployeeDetails employee={viewing} onClose={() => setViewing(null)} onEdit={openEditForm} />
       <ConfirmDialog employee={pendingDelete} deleting={deleting} onCancel={() => setPendingDelete(null)} onConfirm={confirmDelete} />
     </div>
   )

@@ -1,34 +1,35 @@
-﻿# Employee CRUD Application
+# Employee CRUD Application
 
-A beginner-friendly employee directory built with React, Vite, Node.js, Express, and PostgreSQL.
+A local employee directory built with React, Vite, Node.js, Express, and PostgreSQL.
 
-## Features
+## Current features
 
-- Add, view, edit, and delete employees.
-- Search by name, email, mobile number, or designation.
-- Validate required fields and reject duplicate email addresses.
-- Show employee totals from PostgreSQL.
-- Use parameterized SQL queries for database operations.
-- Keep the React frontend, Express backend, and PostgreSQL database separate.
+- Add, view, edit, search, and delete employee records.
+- Store name, email, mobile, designation, department, employment status, optional gender, and an optional photo.
+- Choose department and employment status from dropdowns and gender from an optional radio group.
+- Validate employee fields on the API and prevent duplicate email addresses.
+- Keep the React frontend, Express API, and PostgreSQL database separate.
+
+Employee photos accept PNG, JPEG, WEBP, or GIF files up to 1.5 MB. The API accepts JSON request bodies up to 2 MB. Photos are stored as data URLs in PostgreSQL; keep the database and backups private because employee records contain personal information.
 
 ## Requirements
 
-Install Node.js with npm and PostgreSQL. This project was developed with PostgreSQL 18.6. The existing table structure is in [`database/schema.sql`](database/schema.sql).
+Install Node.js with npm and PostgreSQL. The project was developed with PostgreSQL 18.6. The database structure is in [`database/schema.sql`](database/schema.sql). It creates the current table for a new database and adds newer columns safely to an existing table.
 
-If setting up a new database, create an empty database named `employee_crud`, then run the schema file:
+For a new database, run:
 
 ```powershell
 createdb -U postgres employee_crud
 psql -U postgres -d employee_crud -f .\database\schema.sql
 ```
 
-For an existing database, do not recreate it; `schema.sql` uses `CREATE TABLE IF NOT EXISTS`.
+For an existing database, run the same `schema.sql` file to apply any missing columns. It uses `CREATE TABLE IF NOT EXISTS` and `ADD COLUMN IF NOT EXISTS`.
 
-## Configure the backend
+## Configure and install
 
-Copy `backend/.env.example` to `backend/.env` and enter the database settings and password for your own computer. Keep `.env` private: it is ignored by Git and must never be added to the frontend.
+Copy `backend/.env.example` to `backend/.env` and set your local PostgreSQL connection details. Keep `.env` private and out of the frontend.
 
-Install the packages once in each app folder:
+Install dependencies in each app folder:
 
 ```powershell
 cd D:\curd\backend
@@ -40,34 +41,37 @@ cd D:\curd\frontend
 npm.cmd ci
 ```
 
-On Windows PowerShell, use `npm.cmd` if the `npm` command is blocked by the script execution policy. On macOS or Linux, use `npm`.
+Use `npm.cmd` in Windows PowerShell if the `npm` command is blocked by the script execution policy.
 
-## Start the app
+## Run locally
 
-Open two terminals. In terminal 1:
+Start the backend and frontend in separate terminals:
 
 ```powershell
 cd D:\curd\backend
 npm.cmd run dev
 ```
 
-In terminal 2:
-
 ```powershell
 cd D:\curd\frontend
 npm.cmd run dev
 ```
 
-Open the local URL printed by Vite, usually `http://localhost:5173`. The backend health endpoint is `http://localhost:5000/api/health`.
+Open the URL printed by Vite, usually [http://localhost:5173](http://localhost:5173). The API health endpoint is [http://localhost:5000/api/health](http://localhost:5000/api/health).
 
-## Database and Git backups
+## Database backups
 
-Git stores the source code and database structure (`database/schema.sql`), but it does not store live employee records. A timestamped PostgreSQL data dump is kept locally in `backups/` and ignored by Git to protect employee information. Copy that SQL dump securely when moving the records to another computer. See [`PORTABLE_BACKUP.md`](PORTABLE_BACKUP.md) for restore instructions.
+`database/schema.sql` contains the database structure. Timestamped SQL dumps in `backups/` contain the structure and employee data, and are intentionally ignored by Git. Store and transfer them securely. See [`PORTABLE_BACKUP.md`](PORTABLE_BACKUP.md) for restore instructions.
+
+## Project roadmap
+
+See [`ROADMAP.md`](ROADMAP.md) for delivered features and suggested next steps.
 
 ## Main folders
 
 - `backend/` — Express API, PostgreSQL connection, validation, and CRUD routes.
-- `frontend/` — React and Vite user interface.
-- `database/schema.sql` — PostgreSQL table structure.
-- `backups/` — local database dumps; never commit this folder.
-- `BEGINNER_GUIDE.md` — simple explanation of the files and how the app works.
+- `frontend/` — React and Vite interface.
+- `database/schema.sql` — current schema and safe column additions for existing databases.
+- `backups/` — private local database dumps; do not commit these files.
+- `BEGINNER_GUIDE.md` — explanation of the files and how the app works.
+- `ROADMAP.md` — current project state and possible next releases.

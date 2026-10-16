@@ -1,6 +1,6 @@
 const pool = require('../db');
 
-const employeeColumns = 'id, name, email, mobile, designation, created_at';
+const employeeColumns = 'id, name, email, mobile, designation, department, employment_status, gender, photo, created_at';
 
 function parseId(value) {
   const id = Number(value);
@@ -12,6 +12,10 @@ function validateEmployee(body) {
   const email = typeof body.email === 'string' ? body.email.trim() : '';
   const mobile = body.mobile == null ? '' : String(body.mobile).trim();
   const designation = typeof body.designation === 'string' ? body.designation.trim() : '';
+  const department = typeof body.department === 'string' ? body.department.trim() : '';
+  const employmentStatus = typeof body.employment_status === 'string' ? body.employment_status : 'Active';
+  const gender = body.gender == null || body.gender === '' ? null : body.gender;
+  const photo = body.photo == null ? null : body.photo;
 
   if (!name || name.length > 100) return { error: 'Name is required and must be at most 100 characters.' };
   if (!email || email.length > 150 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -21,8 +25,14 @@ function validateEmployee(body) {
     return { error: 'Enter a valid mobile number, or leave it blank.' };
   }
   if (designation.length > 100) return { error: 'Designation must be at most 100 characters.' };
+  if (department.length > 80) return { error: 'Department must be at most 80 characters.' };
+  if (!['Active', 'On leave', 'Inactive'].includes(employmentStatus)) return { error: 'Choose a valid employment status.' };
+  if (gender !== null && !['Female', 'Male', 'Non-binary', 'Prefer not to say', 'Self-describe'].includes(gender)) return { error: 'Choose a valid gender option.' };
+  if (photo !== null && (typeof photo !== 'string' || photo.length > 2_000_000 || !/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/]+=*$/.test(photo))) {
+    return { error: 'Upload a PNG, JPG, WEBP, or GIF image up to 1.5 MB.' };
+  }
 
-  return { value: { name, email, mobile: mobile || null, designation: designation || null } };
+  return { value: { name, email, mobile: mobile || null, designation: designation || null, department: department || null, employmentStatus, gender, photo } };
 }
 
 function badRequest(res, message) {
@@ -36,7 +46,7 @@ async function listEmployees(req, res, next) {
       search
         ? pool.query(
           `SELECT ${employeeColumns} FROM employees
-           WHERE name ILIKE $1 OR email ILIKE $1 OR mobile ILIKE $1 OR designation ILIKE $1
+           WHERE name ILIKE $1 OR email ILIKE $1 OR mobile ILIKE $1 OR designation ILIKE $1 OR department ILIKE $1
            ORDER BY id DESC`,
           [`%${search}%`],
         )
@@ -74,11 +84,11 @@ async function createEmployee(req, res, next) {
   if (validated.error) return badRequest(res, validated.error);
 
   try {
-    const { name, email, mobile, designation } = validated.value;
+    const { name, email, mobile, designation, department, employmentStatus, gender, photo } = validated.value;
     const result = await pool.query(
-      `INSERT INTO employees (name, email, mobile, designation)
-       VALUES ($1, $2, $3, $4) RETURNING ${employeeColumns}`,
-      [name, email, mobile, designation],
+      `INSERT INTO employees (name, email, mobile, designation, department, employment_status, gender, photo)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING ${employeeColumns}`,
+      [name, email, mobile, designation, department, employmentStatus, gender, photo],
     );
     return res.status(201).json({ success: true, data: result.rows[0] });
   } catch (error) {
@@ -93,11 +103,12 @@ async function updateEmployee(req, res, next) {
   if (validated.error) return badRequest(res, validated.error);
 
   try {
-    const { name, email, mobile, designation } = validated.value;
+    const { name, email, mobile, designation, department, employmentStatus, gender, photo } = validated.value;
     const result = await pool.query(
-      `UPDATE employees SET name = $1, email = $2, mobile = $3, designation = $4
-       WHERE id = $5 RETURNING ${employeeColumns}`,
-      [name, email, mobile, designation, id],
+      `UPDATE employees SET name = $1, email = $2, mobile = $3, designation = $4,
+       department = $5, employment_status = $6, gender = $7, photo = $8
+       WHERE id = $9 RETURNING ${employeeColumns}`,
+      [name, email, mobile, designation, department, employmentStatus, gender, photo, id],
     );
     if (!result.rowCount) {
       return res.status(404).json({ success: false, error: { message: 'Employee not found.' } });
